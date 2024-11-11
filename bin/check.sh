@@ -139,7 +139,7 @@ main() {
   DATACENTERS_MESSAGE=""
   if [ -n "${DATACENTERS-}" ]; then
     OVH_URL="${OVH_URL}&datacenters=${DATACENTERS}"
-    DATACENTERS_MESSAGE="$DATACENTERS datacenter(s)"
+    DATACENTERS_MESSAGE="'$DATACENTERS' datacenter(s)"
   else
     DATACENTERS_MESSAGE="all datacenters"
   fi
@@ -168,10 +168,16 @@ main() {
       message="$PLAN_CODE is available in $AVAILABLE_DATACENTERS datacenter(s)"
       notify_discord "$message"
 
-      # Order the server when available
-      order_server "$AVAILABLE_DATACENTERS"
+      # Order the server for each available datacenter
+      IFS=',' read -r -a datacenter_array <<<"$AVAILABLE_DATACENTERS"
+      for datacenter in "${datacenter_array[@]}"; do
+        echo_stderr "> Ordering server $PLAN_CODE in '$datacenter' datacenter"
+        notify_discord "Ordering server $PLAN_CODE in '$datacenter' datacenter"
+        # order_server "$datacenter"
+      done
     else
       echo_stderr "> checked $PLAN_CODE unavailable in $DATACENTERS_MESSAGE"
+      # notify_discord "$PLAN_CODE is unavailable in $DATACENTERS_MESSAGE"
     fi
 
     # Wait for a specified interval before the next check

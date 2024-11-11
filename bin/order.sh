@@ -5,20 +5,20 @@ set -eu
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
 # Default values
-DEBUG=false
+DEBUG=true
 ENDPOINT="ovh-eu"
 PRICE_DURATION="P1M"
 PRICE_MODE="default"
 QUANTITY=1
 
 echo_stderr() {
-    >&2 echo "$@"
+  echo >&2 "$@"
 }
 
 # Helper function - prints an error message and exits
 exit_error() {
-    echo_stderr "Error: $1"
-    exit 1
+  echo_stderr "Error: $1"
+  exit 1
 }
 
 usage() {
@@ -69,7 +69,7 @@ request() {
     set -x
   fi
   curl -sX "${method}" "${OVH_URL}${endpoint}" \
-    --header "Accept: application/json"\
+    --header "Accept: application/json" \
     --header "Content-Type: application/json" \
     --data "${data}" \
     -w '\n%output{'$HTTP_CODE_FILE'}%{http_code}' \
@@ -166,7 +166,7 @@ item_manual_configuration() {
     i=0
     for value in $(echo "$configuration" | $JQ_BIN -r '.allowedValues[]'); do
       echo_stderr "> $i. $value"
-      i=$((i+1))
+      i=$((i + 1))
     done
     read -p "> Choice: " index
     value="$(echo "$configuration" | $JQ_BIN -r .allowedValues[$index])"
@@ -222,7 +222,7 @@ main() {
 
   # Use configured dataceter if only one is set
   DATACENTER=""
-  if [ -n "${DATACENTERS-}" ] && echo "$DATACENTERS"|grep -vq ,; then
+  if [ -n "${DATACENTERS-}" ] && echo "$DATACENTERS" | grep -vq ,; then
     DATACENTER="$DATACENTERS"
   fi
 
@@ -234,65 +234,65 @@ main() {
   eval set -- "$ARGS"
   while true; do
     case "$1" in
-      -c | --country)
-        COUNTRY="$2"
-        shift 2
-        continue
-        ;;
-      -d | --datacenter)
-        DATACENTER="$2"
-        shift 2
-        continue
-        ;;
-      --debug)
-        DEBUG=true
-        shift 1
-        continue
-        ;;
-      -e | --endpoint)
-        ENDPOINT="$2"
-        shift 2
-        continue
-        ;;
-      -h | --help)
-        usage
-        exit 0
-        ;;
-      -i | --item-configuration)
-        echo "$2" | grep -q '=' || \
-          exit_error "Error: invalid item configuration '$2'"
-        item_configurations+=("$2")
-        shift 2
-        continue
-        ;;
-      -q | --quantity)
-        QUANTITY="$2"
-        shift 2
-        continue
-        ;;
-      -p | --plan-code)
-        PLAN_CODE="$2"
-        shift 2
-        continue
-        ;;
-      --price-mode)
-        PRICE_MODE="$2"
-        shift 2
-        continue
-        ;;
-      --price-duration)
-        PRICE_DURATION="$2"
-        shift 2
-        continue
-        ;;
-      '--')
-        shift
-        break
-        ;;
-      *)
-        echo_stderr 'Internal error!'
-        exit 1
-        ;;
+    -c | --country)
+      COUNTRY="$2"
+      shift 2
+      continue
+      ;;
+    -d | --datacenter)
+      DATACENTER="$2"
+      shift 2
+      continue
+      ;;
+    --debug)
+      DEBUG=true
+      shift 1
+      continue
+      ;;
+    -e | --endpoint)
+      ENDPOINT="$2"
+      shift 2
+      continue
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -i | --item-configuration)
+      echo "$2" | grep -q '=' ||
+        exit_error "Error: invalid item configuration '$2'"
+      item_configurations+=("$2")
+      shift 2
+      continue
+      ;;
+    -q | --quantity)
+      QUANTITY="$2"
+      shift 2
+      continue
+      ;;
+    -p | --plan-code)
+      PLAN_CODE="$2"
+      shift 2
+      continue
+      ;;
+    --price-mode)
+      PRICE_MODE="$2"
+      shift 2
+      continue
+      ;;
+    --price-duration)
+      PRICE_DURATION="$2"
+      shift 2
+      continue
+      ;;
+    '--')
+      shift
+      break
+      ;;
+    *)
+      echo_stderr 'Internal error!'
+      exit 1
+      ;;
     esac
   done
 
@@ -312,7 +312,7 @@ main() {
   OVH_URL="${OVH_API_ENDPOINTS["$ENDPOINT"]}"
 
   # Create cart
-  expire="$(date --iso-8601=seconds --date tomorrow)"
+  expire="$(date -u -d "@$(($(date +%s) + 86400))" '+%Y-%m-%dT%H:%M:%SZ')"
   cart="$(request POST "/order/cart" '{"description":"kimsufi-notifier","expire":"'"$expire"'","ovhSubsidiary":"'"$COUNTRY"'"}')"
   $DEBUG && echo "$cart" | $JQ_BIN -cr .
 
@@ -337,7 +337,7 @@ main() {
   # Configure item
   labels_auto_configured="$(item_auto_configuration "$cart_id" "$item_id")"
   labels_user_configured="$(item_user_configuration "$cart_id" "$item_id" "${item_configurations[@]}")"
-  labels_configured=( "${labels_auto_configured[@]}" "${labels_user_configured[@]}" )
+  labels_configured=("${labels_auto_configured[@]}" "${labels_user_configured[@]}")
   item_manual_configuration "$cart_id" "$item_id" "${labels_configured[@]}"
 
   # Configure eco options
