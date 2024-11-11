@@ -1,0 +1,12 @@
+config.env
+config.env.example
+LICENSE
+README.md
+RUN_IN_CI.md
+USAGE.md
+test/
+deployments/
+.github/
+.git/
+.circleci/
+assets/
