@@ -181,7 +181,7 @@ main() {
     fi
 
     # Wait for a specified interval before the next check
-    sleep 20s
+    sleep 5s
   done
 }
 
