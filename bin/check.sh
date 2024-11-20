@@ -173,7 +173,7 @@ main() {
       for datacenter in "${datacenter_array[@]}"; do
         echo_stderr "> Ordering server $PLAN_CODE in '$datacenter' datacenter"
         notify_discord "Ordering server $PLAN_CODE in '$datacenter' datacenter"
-        # order_server "$datacenter"
+        order_server "$datacenter"
       done
     else
       echo_stderr "> checked $PLAN_CODE unavailable in $DATACENTERS_MESSAGE"
